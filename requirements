@@ -1,0 +1,7 @@
+python >= 3.10
+opencv
+numpy
+insightface
+onnxruntime
+pytorch
+
