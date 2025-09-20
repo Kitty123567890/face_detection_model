@@ -1,7 +1,7 @@
-python >= 3.10
-opencv
-numpy
-insightface
-onnxruntime
-pytorch
-
+insightface==0.7.3
+opencv-python==4.8.1.78
+numpy==1.24.3
+scikit-learn==1.3.0
+scipy==1.11.3
+tqdm==4.66.1
+onnxruntime-gpu==1.15.1 
