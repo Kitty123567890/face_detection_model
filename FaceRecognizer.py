@@ -1,36 +1,4 @@
-import insightface
-from insightface.app import FaceAnalysis
 import cv2
-import numpy as np
-
-class FaceRecognizer:
-    def __init__(self, model_name, det_size=(640, 640), ctx_id=0):
-        self.model_name = model_name
-        self.det_size = det_size
-        self.ctx_id = ctx_id
-        self.app = self.load_model()
-
-
-    def load_model(self):
-        try:
-            app = FaceAnalysis(name=self.model_name, providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
-            app.prepare(ctx_id=self.ctx_id, det_size=self.det_size)
-            print("模型加载成功:", self.model_name)
-            return app
-        except Exception as e:
-            print(f"模型加载失败，请检查环境或模型名称: {e}")
-            exit()
-
-    def recognize(self, image):
-        faces = self.app.get(image)
-        return faces
-    
-
-if __name__ == "__main__":
-    model_name = 'buffalo_l'  # 选择模型名称
-    recognizer = FaceRecognizer(model_name=model_name, ctx_id=0, det_size=(640, 640))
-    
-    import cv2
 import numpy as np
 import onnxruntime as ort
 from insightface.utils import face_align
