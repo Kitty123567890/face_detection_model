@@ -1,0 +1,7 @@
+FaceDetection.py
+*.onnx
+devkit/bin/opencv-2.4.13.7/
+devkit/bin/2.4.13.7.tar.gz
+feature_out/
+feature_out_clean/
+results/otherFiles/
