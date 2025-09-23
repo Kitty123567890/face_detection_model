@@ -30,33 +30,62 @@ if __name__ == "__main__":
     model_name = 'buffalo_l'  # 选择模型名称
     recognizer = FaceRecognizer(model_name=model_name, ctx_id=0, det_size=(640, 640))
     
-    img_path = './test_image.jpg' # 替换成你的图片路径
+    import cv2
+import numpy as np
+import onnxruntime as ort
+from insightface.utils import face_align
+
+class FaceRecognizer:
+    def __init__(self, model_path, ctx_id=0):
+        # 直接加载ONNX模型
+        providers = ['CUDAExecutionProvider', 'CPUExecutionProvider'] if ctx_id >= 0 else ['CPUExecutionProvider']
+        self.session = ort.InferenceSession(model_path, providers=providers)
+        self.input_name = self.session.get_inputs()[0].name
+        self.output_name = self.session.get_outputs()[0].name
+        
+    def recognize(self, img):
+        # 预处理图像
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img = np.transpose(img, (2, 0, 1))
+        img = img.astype(np.float32)
+        img = (img - 127.5) / 128.0
+        img = np.expand_dims(img, axis=0)
+        
+        # 运行推理
+        embedding = self.session.run([self.output_name], {self.input_name: img})[0]
+        
+        # 归一化特征向量
+        embedding = embedding / np.linalg.norm(embedding)
+        
+        return [type('obj', (object,), {
+            'normed_embedding': embedding[0],
+            'embedding': embedding[0]
+        })]
+
+if __name__ == "__main__":
+    model_path = './w600k_r50.onnx'  # 替换为您的模型路径
+    
+    recognizer = FaceRecognizer(model_path=model_path, ctx_id=0)
+    
+    img_path = './test_image.png' 
     img = cv2.imread(img_path)
 
     if img is None:
         print(f"无法读取图片: {img_path}")
         exit()
 
+    # 确保图像尺寸为112x112
+    if img.shape[:2] != (112, 112):
+        print(f"调整图像尺寸从 {img.shape[:2]} 到 112x112")
+        img = cv2.resize(img, (112, 112))
+    
     faces = recognizer.recognize(img)
 
     if not faces:
-        print("在图片中没有检测到人脸。")
+        print("特征提取失败。")
     else:
-        print(f"在图片中检测到 {len(faces)} 张人脸。")
-        for i, face in enumerate(faces):
-            print(f"\n--- 人脸 {i+1} ---")
-            
-            # 边界框 (bounding box)
-            bbox = face.bbox.astype(int)
-            print(f"  - 位置 (边界框): [x1, y1, x2, y2] = {bbox}")
-            
-            # 人脸特征向量 (embedding)
-            embedding = face.embedding
-            print(f"  - 特征向量 (Embedding): shape={embedding.shape}, dtype={embedding.dtype}")
-            # 这是一个512维的numpy数组，可以用于后续的身份比对
-            
-            # 其他信息
-            if face.kps is not None:
-                print(f"  - 关键点 (Keypoints) 数量: {len(face.kps)}")
+        # 只输出人脸特征向量
+        embedding = faces[0].normed_embedding
+        print(list(embedding))
 
     
